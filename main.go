@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"math/rand"
 	"os"
@@ -15,7 +14,7 @@ func checkDisabled() {
 	if _, err := os.Stat(lockfilelocation); err == nil {
 		println("Diabled Lock found we don't like diabled run")
 		os.Remove(lockfilelocation)
-		fmt.Println("Lock file removed")
+		log.Println("Lock file removed")
 	}
 
 }
@@ -28,15 +27,15 @@ func checkLockFile() {
 		now := time.Now()
 		cutoff := 25 * time.Minute
 		if diff := now.Sub(filestat.ModTime()); diff > cutoff {
-			fmt.Printf("Deleting %s which is %s old\n", filestat.Name(), diff)
+			log.Printf("Deleting %s which is %s old\n", filestat.Name(), diff)
 			os.Remove(lockfilelocation)
 		} else {
-			fmt.Printf("Found lock file %s which is less than %s old aborting run\n", filestat.Name(), cutoff)
+			log.Printf("Found lock file %s which is less than %s old aborting run\n", filestat.Name(), cutoff)
 			runPuppet()
 		}
 
 	} else {
-		println("No run lock found proceeding")
+		log.Printf("No run lock found proceeding")
 	}
 }
 func random(min, max int) int {
@@ -45,8 +44,9 @@ func random(min, max int) int {
 }
 
 func runPuppet() {
+	log.Print("Running Puppet")
 	myrand := random(15, 45)
-	fmt.Printf("Delaying puppet-nanny run by %d minutes", myrand)
+	log.Printf("Delaying puppet-nanny run by %d minutes", myrand)
 	time.Sleep(time.Duration(myrand) * time.Minute)
 	checkDisabled()
 	checkLockFile()
@@ -59,18 +59,15 @@ func runPuppet() {
 	if err != nil {
 		log.Fatalf("cmd.Run() failed with %s\n", err)
 	}
-
 	runPuppet()
 }
 
 func santityChecks() {
 	//Check users priv if not root exit
-	println("Checking for root")
+	log.Print("Checking for root")
 	if os.Getuid() != 0 {
-		println("puppet-nanny needs to be ran as root:")
-		os.Exit(1)
+		log.Fatalf("puppet-nanny needs to be ran as root:")
 	}
-	println("Root found continuing:")
 	runPuppet()
 }
 
