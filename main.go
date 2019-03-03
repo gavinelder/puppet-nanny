@@ -12,9 +12,18 @@ func checkDisabled() {
 
 	lockfilelocation := "/opt/puppetlabs/puppet/cache/state/agent_disabled.lock"
 	if _, err := os.Stat(lockfilelocation); err == nil {
-		println("Diabled Lock found we don't like diabled run")
+		log.Println("Diabled Lock found we don't like diabled run")
 		os.Remove(lockfilelocation)
 		log.Println("Lock file removed")
+	}
+
+}
+
+func checkPuppetInstalled() {
+
+	puppetBinLocation := "/opt/puppetlabs/puppet/bin/puppet"
+	if _, err := os.Stat(puppetBinLocation); err != nil {
+		log.Fatalf("Puppet binary not found at %s", puppetBinLocation)
 	}
 
 }
@@ -50,11 +59,11 @@ func runPuppet() {
 	time.Sleep(time.Duration(myrand) * time.Minute)
 	checkDisabled()
 	checkLockFile()
-
+	checkPuppetInstalled()
 	cmd := exec.Command("/opt/puppetlabs/puppet/bin/puppet", "agent", "-t")
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-
+	log.Println("Running Puppet")
 	err := cmd.Run()
 	if err != nil {
 		log.Fatalf("cmd.Run() failed with %s\n", err)
