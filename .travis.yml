@@ -7,4 +7,4 @@ go:
 go_import_path: github.com/gavinelder/puppet-nanny
 
 script:
-- go build main.go
+- make build
