@@ -4,6 +4,8 @@
 
 :warning: The following is hacky
 
+PRs welcome.
+
 ## Overview
 
 Long term this application is going to be a Cross OS compliant tool for managing puppet runs as a seperate binary which does not conflict with the main puppet system.
@@ -21,5 +23,3 @@ Long term I want to:
 - Implement logging (Avoided currently with view of using cross OS compliant logging lib)
 - Bootstrap itself
 - Allow passing of flags for Environment , Run time or other...
-
-
