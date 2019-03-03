@@ -1,10 +1,12 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"math/rand"
 	"os"
 	"os/exec"
+	"runtime"
 	"time"
 )
 
@@ -21,7 +23,17 @@ func checkDisabled() {
 
 func checkPuppetInstalled() {
 
-	puppetBinLocation := "/opt/puppetlabs/puppet/bin/puppet"
+	switch os := runtime.GOOS; os {
+	case "darwin", "linux":
+		puppetBinLocation := "/opt/puppetlabs/puppet/bin/puppet"
+	case "windows":
+		puppetBinLocation := "/opt/puppetlabs/puppet/bin/puppet"
+	default:
+		// freebsd, openbsd,
+		// plan9, windows...
+		fmt.Printf("%s.", os)
+	}
+
 	if _, err := os.Stat(puppetBinLocation); err != nil {
 		log.Fatalf("Puppet binary not found at %s", puppetBinLocation)
 	}
