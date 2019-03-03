@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"math/rand"
 	"os"
@@ -12,7 +11,13 @@ import (
 
 func checkDisabled() {
 
-	lockfilelocation := "/opt/puppetlabs/puppet/cache/state/agent_disabled.lock"
+	lockfilelocation := ""
+	switch os := runtime.GOOS; os {
+	case "darwin", "linux":
+		lockfilelocation = "/opt/puppetlabs/puppet/cache/state/agent_disabled.lock"
+	case "windows":
+		lockfilelocation = "C:\\ProgramData\\PuppetLabs\\puppet\\cache\\state\\agent_disabled.lock"
+	}
 	if _, err := os.Stat(lockfilelocation); err == nil {
 		log.Println("Diabled Lock found we don't like diabled run")
 		os.Remove(lockfilelocation)
@@ -23,17 +28,14 @@ func checkDisabled() {
 
 func checkPuppetInstalled() {
 
+	puppetBinLocation := ""
 	switch os := runtime.GOOS; os {
 	case "darwin", "linux":
-		puppetBinLocation := "/opt/puppetlabs/puppet/bin/puppet"
+		puppetBinLocation = "/opt/puppetlabs/puppet/bin/puppet"
 	case "windows":
-		puppetBinLocation := "/opt/puppetlabs/puppet/bin/puppet"
-	default:
-		// freebsd, openbsd,
-		// plan9, windows...
-		fmt.Printf("%s.", os)
+		puppetBinLocation = "C:\\Program Files\\Puppet Labs\\Puppet\\bin\\puppet.bat"
 	}
-
+	log.Printf("Puppet binary found at %s", puppetBinLocation)
 	if _, err := os.Stat(puppetBinLocation); err != nil {
 		log.Fatalf("Puppet binary not found at %s", puppetBinLocation)
 	}
@@ -42,7 +44,13 @@ func checkPuppetInstalled() {
 
 func checkLockFile() {
 
-	lockfilelocation := "/opt/puppetlabs/puppet/cache/state/agent_catalog_run.lock"
+	lockfilelocation := ""
+	switch os := runtime.GOOS; os {
+	case "darwin", "linux":
+		lockfilelocation = "/opt/puppetlabs/puppet/cache/state/agent_catalog_run.lock"
+	case "windows":
+		lockfilelocation = "C:\\ProgramData\\PuppetLabs\\puppet\\cache\\state\\agent_catalog_run.lock"
+	}
 	if filestat, err := os.Stat(lockfilelocation); err == nil {
 
 		now := time.Now()
@@ -72,7 +80,13 @@ func runPuppet() {
 	checkDisabled()
 	checkLockFile()
 	checkPuppetInstalled()
-	cmd := exec.Command("/opt/puppetlabs/puppet/bin/puppet", "agent", "-t")
+	cmd := exec.Command("")
+	switch os := runtime.GOOS; os {
+	case "darwin", "linux":
+		cmd = exec.Command("/opt/puppetlabs/puppet/bin/puppet", "agent", "-t")
+	case "windows":
+		cmd = exec.Command("C:\\Program Files\\Puppet Labs\\Puppet\\bin\\puppet.bat", "agent", "-t")
+	}
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	log.Println("Running Puppet")
