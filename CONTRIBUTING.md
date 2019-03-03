@@ -17,7 +17,7 @@ go get github.com/gavinelder/puppet-nanny
 or
 
 ```shell
-git clone git@github.com:gavinelder/puppet-nanny.git && cd crypt-bde
+git clone git@github.com:gavinelder/puppet-nanny.git && cd puppet-nanny
 make deps
 make
 ```
@@ -27,7 +27,7 @@ make
 ```shell
 username=$GitHubUsername
 # add your remote/upstream
-git remote add $username git@github.com:$username/crypt-bde.git
+git remote add $username git@github.com:$username/puppet-nanny.git
 
 # update from origin/master
 git pull --rebase
