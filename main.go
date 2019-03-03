@@ -64,7 +64,7 @@ func runPuppet() {
 	runPuppet()
 }
 
-func checkForAdmin() {
+func santityChecks() {
 	//Check users priv if not root exit
 	println("Checking for root")
 	if os.Getuid() != 0 {
@@ -72,10 +72,9 @@ func checkForAdmin() {
 		os.Exit(1)
 	}
 	println("Root found continuing:")
-
+	runPuppet()
 }
 
 func main() {
-	checkForAdmin()
-	runPuppet()
+	santityChecks()
 }
