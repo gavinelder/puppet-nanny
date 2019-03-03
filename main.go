@@ -32,8 +32,10 @@ func checkLockFile() {
 			fmt.Printf("Deleting %s which is %s old\n", filestat.Name(), diff)
 			os.Remove(lockfilelocation)
 		} else {
-			os.Exit(0)
+			fmt.Printf("Found lock file %s which is less than %s old aborting run\n", filestat.Name(), cutoff)
+			runPuppet()
 		}
+
 	} else {
 		println("No run lock found proceeding")
 	}
@@ -56,10 +58,17 @@ func runPuppet() {
 	}
 	outStr, errStr := string(stdout.Bytes()), string(stderr.Bytes())
 	fmt.Printf("out:\n%s\nerr:\n%s\n", outStr, errStr)
+	runPuppet()
+}
+
+func checkForAdmin() {
+	//Check users priv if not root exit
+	println("Checking for root")
 
 }
 
 func main() {
+	checkForAdmin()
 	myrand := random(5, 30)
 	fmt.Printf("Delaying puppet-nanny run by %d minutes", myrand)
 	time.Sleep(time.Duration(myrand) * time.Minute)
