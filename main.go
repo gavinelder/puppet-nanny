@@ -25,11 +25,15 @@ func checkLockFile() {
 
 	lockfilelocation := "/opt/puppetlabs/puppet/cache/state/agent_catalog_run.lock"
 	if filestat, err := os.Stat(lockfilelocation); err == nil {
-		now = time.time()
-		if filestat.ModTime()
-		println("Run lock found removing")
-		os.Remove(lockfilelocation)
-		fmt.Println("Lock file removed")
+
+		now := time.Now()
+		cutoff := 25 * time.Minute
+		if diff := now.Sub(filestat.ModTime()); diff > cutoff {
+			fmt.Printf("Deleting %s which is %s old\n", filestat.Name(), diff)
+			os.Remove(lockfilelocation)
+		} else {
+			os.Exit(0)
+		}
 	} else {
 		println("No run lock found proceeding")
 	}
