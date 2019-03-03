@@ -100,8 +100,16 @@ func runPuppet() {
 func santityChecks() {
 	//Check users priv if not root exit
 	log.Print("Checking for root")
-	if os.Getuid() != 0 {
-		log.Fatalf("puppet-nanny needs to be ran as root:")
+	switch OS := runtime.GOOS; OS {
+	case "darwin", "linux":
+		if os.Getuid() != 0 {
+			log.Fatalf("puppet-nanny needs to be ran as root:")
+		}
+	case "windows":
+		_, err := os.Open("\\\\.\\PHYSICALDRIVE0")
+		if err != nil {
+			log.Fatalf("puppet-nanny needs to be ran as Admin:")
+		}
 	}
 	runPuppet()
 }
