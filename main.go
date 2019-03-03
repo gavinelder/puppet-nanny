@@ -64,12 +64,17 @@ func runPuppet() {
 func checkForAdmin() {
 	//Check users priv if not root exit
 	println("Checking for root")
+	if os.Getuid() != 0 {
+		println("puppet-nanny needs to be ran as root:")
+		os.Exit(1)
+	}
+	println("Root found continuing:")
 
 }
 
 func main() {
 	checkForAdmin()
-	myrand := random(5, 30)
+	myrand := random(15, 45)
 	fmt.Printf("Delaying puppet-nanny run by %d minutes", myrand)
 	time.Sleep(time.Duration(myrand) * time.Minute)
 	runPuppet()
