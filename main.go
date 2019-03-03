@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"fmt"
 	"log"
 	"math/rand"
@@ -51,16 +50,16 @@ func runPuppet() {
 	time.Sleep(time.Duration(myrand) * time.Minute)
 	checkDisabled()
 	checkLockFile()
+
 	cmd := exec.Command("/opt/puppetlabs/puppet/bin/puppet", "agent", "-t")
-	var stdout, stderr bytes.Buffer
-	cmd.Stdout = &stdout
-	cmd.Stderr = &stderr
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+
 	err := cmd.Run()
 	if err != nil {
 		log.Fatalf("cmd.Run() failed with %s\n", err)
 	}
-	outStr, errStr := string(stdout.Bytes()), string(stderr.Bytes())
-	fmt.Printf("out:\n%s\nerr:\n%s\n", outStr, errStr)
+
 	runPuppet()
 }
 
