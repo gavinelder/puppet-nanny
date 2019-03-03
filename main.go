@@ -46,6 +46,9 @@ func random(min, max int) int {
 }
 
 func runPuppet() {
+	myrand := random(15, 45)
+	fmt.Printf("Delaying puppet-nanny run by %d minutes", myrand)
+	time.Sleep(time.Duration(myrand) * time.Minute)
 	checkDisabled()
 	checkLockFile()
 	cmd := exec.Command("/opt/puppetlabs/puppet/bin/puppet", "agent", "-t")
@@ -74,8 +77,5 @@ func checkForAdmin() {
 
 func main() {
 	checkForAdmin()
-	myrand := random(15, 45)
-	fmt.Printf("Delaying puppet-nanny run by %d minutes", myrand)
-	time.Sleep(time.Duration(myrand) * time.Minute)
 	runPuppet()
 }
