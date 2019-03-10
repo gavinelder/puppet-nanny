@@ -19,7 +19,7 @@ func checkDisabled() {
 		lockfilelocation = "C:\\ProgramData\\PuppetLabs\\puppet\\cache\\state\\agent_disabled.lock"
 	}
 	if _, err := os.Stat(lockfilelocation); err == nil {
-		log.Println("Diabled Lock found we don't like diabled run")
+		log.Println("Disabl lock found, removing")
 		os.Remove(lockfilelocation)
 		log.Println("Lock file removed")
 	}
@@ -34,8 +34,12 @@ func checkPuppetInstalled() {
 		puppetBinLocation = "/opt/puppetlabs/puppet/bin/puppet"
 	case "windows":
 		puppetBinLocation = "C:\\Program Files\\Puppet Labs\\Puppet\\bin\\puppet.bat"
+	default:
+		log.Fatalf("Err %s not supported.", os)
 	}
+
 	log.Printf("Puppet binary found at %s", puppetBinLocation)
+
 	if _, err := os.Stat(puppetBinLocation); err != nil {
 		log.Fatalf("Puppet binary not found at %s", puppetBinLocation)
 	}
@@ -98,7 +102,7 @@ func runPuppet() {
 }
 
 func santityChecks() {
-	//Check users priv if not root exit
+	//Ensure puppet is running with elevated privledge.
 	log.Print("Checking for root")
 	switch OS := runtime.GOOS; OS {
 	case "darwin", "linux":
