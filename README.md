@@ -1,7 +1,7 @@
 # Puppet-Nanny
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/gavinelder/puppet-nanny)](https://goreportcard.com/report/github.com/gavinelder/puppet-nanny)
-[![Build Status](https://travis-ci.org/gavinelder/puppet-nanny.svg?branch=master)](https://travis-ci.org/GavinElder/puppet-nanny)
+[![Build Status](https://travis-ci.org/gavinelder/puppet-nanny.svg?branch=master)](https://travis-ci.org/gavinelder/puppet-nanny)
 
 :warning: The following is hacky
 
