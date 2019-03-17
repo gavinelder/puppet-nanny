@@ -10,7 +10,7 @@ import (
 )
 
 func checkDisabled() {
-
+	//Check for a diabled lockfile and if present remove to allow puppet to run.
 	lockfilelocation := ""
 	switch os := runtime.GOOS; os {
 	case "darwin", "linux":
@@ -27,7 +27,7 @@ func checkDisabled() {
 }
 
 func checkPuppetInstalled() {
-
+	//Check for the puppet binary.
 	puppetBinLocation := ""
 	switch os := runtime.GOOS; os {
 	case "darwin", "linux":
@@ -47,7 +47,7 @@ func checkPuppetInstalled() {
 }
 
 func checkLockFile() {
-
+	//Check for puppet run lock & remove if > 25 mins old.
 	lockfilelocation := ""
 	switch os := runtime.GOOS; os {
 	case "darwin", "linux":
@@ -77,7 +77,7 @@ func random(min, max int) int {
 }
 
 func runPuppet() {
-	log.Print("Running Puppet")
+	//Run puppet.
 	myrand := random(15, 45)
 	log.Printf("Delaying puppet-nanny run by %d minutes", myrand)
 	time.Sleep(time.Duration(myrand) * time.Minute)
@@ -101,9 +101,8 @@ func runPuppet() {
 	runPuppet()
 }
 
-func santityChecks() {
+func sanityChecks() {
 	//Ensure puppet is running with elevated privledge.
-	log.Print("Checking for root")
 	switch OS := runtime.GOOS; OS {
 	case "darwin", "linux":
 		if os.Getuid() != 0 {
@@ -119,5 +118,5 @@ func santityChecks() {
 }
 
 func main() {
-	santityChecks()
+	sanityChecks()
 }
