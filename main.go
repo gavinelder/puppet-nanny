@@ -29,7 +29,7 @@ func checkDisabled() {
 
 }
 
-func checkPuppetInstalled() {
+func checkIsPuppetInstalled() {
 	// Check for the puppet binary.
 	puppetBinLocation := ""
 	switch goos := runtime.GOOS; goos {
@@ -122,7 +122,7 @@ func main() {
 
 	for {
 		priveledgeCheck()
-		checkPuppetInstalled()
+		checkIsPuppetInstalled()
 		checkRunLockFile()
 		checkDisabled()
 		runPuppet()
