@@ -10,32 +10,35 @@ import (
 )
 
 func checkDisabled() {
-	//Check for a diabled lockfile and if present remove to allow puppet to run.
-	lockfilelocation := ""
-	switch os := runtime.GOOS; os {
+	// Check for a diabled lockfile and if present remove to allow puppet to run.
+	lockFileLocation := ""
+	switch goos := runtime.GOOS; goos {
 	case "darwin", "linux":
-		lockfilelocation = "/opt/puppetlabs/puppet/cache/state/agent_disabled.lock"
+		lockFileLocation = "/opt/puppetlabs/puppet/cache/state/agent_disabled.lock"
 	case "windows":
-		lockfilelocation = "C:\\ProgramData\\PuppetLabs\\puppet\\cache\\state\\agent_disabled.lock"
+		lockFileLocation = "C:\\ProgramData\\PuppetLabs\\puppet\\cache\\state\\agent_disabled.lock"
 	}
-	if _, err := os.Stat(lockfilelocation); err == nil {
-		log.Println("Disabl lock found, removing")
-		os.Remove(lockfilelocation)
+	if _, err := os.Stat(lockFileLocation); err == nil {
+		log.Println("Disable lock found, removing")
+		err := os.Remove(lockFileLocation)
+		if err != nil {
+			log.Fatalf("Unable to remove lockfile %s", lockFileLocation)
+		}
 		log.Println("Lock file removed")
 	}
 
 }
 
 func checkPuppetInstalled() {
-	//Check for the puppet binary.
+	// Check for the puppet binary.
 	puppetBinLocation := ""
-	switch os := runtime.GOOS; os {
+	switch goos := runtime.GOOS; goos {
 	case "darwin", "linux":
 		puppetBinLocation = "/opt/puppetlabs/puppet/bin/puppet"
 	case "windows":
 		puppetBinLocation = "C:\\Program Files\\Puppet Labs\\Puppet\\bin\\puppet.bat"
 	default:
-		log.Fatalf("Err %s not supported.", os)
+		log.Fatalf("Err OS %s not supported.", goos)
 	}
 
 	log.Printf("Puppet binary found at %s", puppetBinLocation)
@@ -46,46 +49,46 @@ func checkPuppetInstalled() {
 
 }
 
-func checkLockFile() {
-	//Check for puppet run lock & remove if > 25 mins old.
-	lockfilelocation := ""
-	switch os := runtime.GOOS; os {
+func checkRunLockFile() {
+	// Check for puppet run lock & remove if > 25 mins old.
+	lockFileLocation := ""
+	switch goos := runtime.GOOS; goos {
 	case "darwin", "linux":
-		lockfilelocation = "/opt/puppetlabs/puppet/cache/state/agent_catalog_run.lock"
+		lockFileLocation = "/opt/puppetlabs/puppet/cache/state/agent_catalog_run.lock"
 	case "windows":
-		lockfilelocation = "C:\\ProgramData\\PuppetLabs\\puppet\\cache\\state\\agent_catalog_run.lock"
+		lockFileLocation = "C:\\ProgramData\\PuppetLabs\\puppet\\cache\\state\\agent_catalog_run.lock"
 	}
-	if filestat, err := os.Stat(lockfilelocation); err == nil {
+	if filestat, err := os.Stat(lockFileLocation); err == nil {
 
 		now := time.Now()
 		cutoff := 25 * time.Minute
 		if diff := now.Sub(filestat.ModTime()); diff > cutoff {
 			log.Printf("Deleting %s which is %s old\n", filestat.Name(), diff)
-			os.Remove(lockfilelocation)
+			err := os.Remove(lockFileLocation)
+			if err != nil {
+				log.Fatalf("Unable to remove lockfile %s", lockFileLocation)
+			}
 		} else {
 			log.Printf("Found lock file %s which is less than %s old aborting run\n", filestat.Name(), cutoff)
-			runPuppet()
 		}
 
 	} else {
 		log.Printf("No run lock found proceeding")
 	}
 }
+
 func random(min, max int) int {
 	rand.Seed(time.Now().Unix())
 	return rand.Intn(max-min) + min
 }
 
 func runPuppet() {
-	//Run puppet.
+	// Run puppet.
 	myrand := random(15, 45)
 	log.Printf("Delaying puppet-nanny run by %d minutes", myrand)
 	time.Sleep(time.Duration(myrand) * time.Minute)
-	checkDisabled()
-	checkLockFile()
-	checkPuppetInstalled()
 	cmd := exec.Command("")
-	switch os := runtime.GOOS; os {
+	switch goos := runtime.GOOS; goos {
 	case "darwin", "linux":
 		cmd = exec.Command("/opt/puppetlabs/puppet/bin/puppet", "agent", "-t")
 	case "windows":
@@ -98,12 +101,11 @@ func runPuppet() {
 	if err != nil {
 		log.Fatalf("cmd.Run() failed with %s\n", err)
 	}
-	runPuppet()
 }
 
-func sanityChecks() {
-	//Ensure puppet is running with elevated privledge.
-	switch OS := runtime.GOOS; OS {
+func priveledgeCheck() {
+	// Ensure puppet is running with elevated privledge.
+	switch goos := runtime.GOOS; goos {
 	case "darwin", "linux":
 		if os.Getuid() != 0 {
 			log.Fatalf("puppet-nanny needs to be ran as root:")
@@ -114,9 +116,15 @@ func sanityChecks() {
 			log.Fatalf("puppet-nanny needs to be ran as Admin:")
 		}
 	}
-	runPuppet()
 }
 
 func main() {
-	sanityChecks()
+
+	for {
+		priveledgeCheck()
+		checkPuppetInstalled()
+		checkRunLockFile()
+		checkDisabled()
+		runPuppet()
+	}
 }
