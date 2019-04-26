@@ -91,15 +91,17 @@ func runPuppet() {
 	myrand := random(15, 45)
 	log.Printf("Delaying puppet-nanny run by %d minutes", myrand)
 	time.Sleep(time.Duration(myrand) * time.Minute)
-	// Carry out
+	// Carry out necessary checks to see if we should run puppet at this time.
 	err := checkRunLockFile()
 	if err != nil {
 		return
 	}
+	// Check if puppet is disabled, checked as part of every run as someone may disable at any point.
 	err = checkDisabled()
 	if err != nil {
 		return
 	}
+
 	cmd := exec.Command("")
 	switch goos := runtime.GOOS; goos {
 	case "darwin", "linux":
@@ -109,12 +111,11 @@ func runPuppet() {
 	}
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	log.Println("Running Puppet")
-
 	err = cmd.Run()
 	if err != nil {
 		log.Fatalf("cmd.Run() failed with %s\n", err)
 	}
+	log.Println("Running Puppet")
 }
 
 func priveledgeCheck() {
