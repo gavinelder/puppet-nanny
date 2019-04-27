@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-func checkDisabled() error {
+func removeAgentDisableLock() error {
 	// Check for a diabled lockfile and if present remove to allow puppet to run.
 	lockFileLocation := ""
 	switch goos := runtime.GOOS; goos {
@@ -50,8 +50,8 @@ func checkIsPuppetInstalled() {
 
 }
 
-func checkRunLockFile() error {
-	// Check for puppet run lock & remove if > 25 mins old.
+func checkRunState() error {
+	// Check for puppet running state by inspecting the lockfile & remove if > 25 mins old.
 	lockFileLocation := ""
 	switch goos := runtime.GOOS; goos {
 	case "darwin", "linux":
@@ -92,13 +92,11 @@ func runPuppet() {
 	log.Printf("Delaying puppet-nanny run by %d minutes", myrand)
 	time.Sleep(time.Duration(myrand) * time.Minute)
 	// Carry out necessary checks to see if we should run puppet at this time.
-	err := checkRunLockFile()
-	if err != nil {
+	if err := checkRunState(); err != nil {
 		return
 	}
 	// Check if puppet is disabled, checked as part of every run as someone may disable at any point.
-	err = checkDisabled()
-	if err != nil {
+	if err := removeAgentDisableLock(); err != nil {
 		return
 	}
 
@@ -111,8 +109,7 @@ func runPuppet() {
 	}
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	err = cmd.Run()
-	if err != nil {
+	if err := cmd.Run(); err != nil {
 		log.Fatalf("cmd.Run() failed with %s\n", err)
 	}
 	log.Println("Running Puppet")
@@ -126,8 +123,7 @@ func priveledgeCheck() {
 			log.Fatalf("puppet-nanny needs to be ran as root")
 		}
 	case "windows":
-		_, err := os.Open("\\\\.\\PHYSICALDRIVE0")
-		if err != nil {
+		if _, err := os.Open("\\\\.\\PHYSICALDRIVE0"); err != nil {
 			log.Fatalf("puppet-nanny needs to be ran with admin privledges")
 		}
 	}
