@@ -24,11 +24,6 @@ func removeAgentDisableLock(disableLockFileLocation string) error {
 	return nil
 }
 
-func checkIsPuppetInstalled() {
-	// Check for the puppet binary.
-
-}
-
 func checkRunState(runLockFileLocation string) error {
 	// Check for puppet running state by inspecting the lockfile & remove if > 25 mins old.
 	if filestat, err := os.Stat(runLockFileLocation); err == nil {
