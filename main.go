@@ -74,7 +74,6 @@ func runPuppet(puppetBinLocation, execPuppetCMD, runLockFileLocation, disableLoc
 }
 
 func main() {
-
 	execPuppetCMD := ""
 	runLockFileLocation := ""
 	disableLockFileLocation := ""
