@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"log"
 	"math/rand"
 	"os"
@@ -10,14 +11,14 @@ import (
 )
 
 func removeAgentDisableLock(disableLockFileLocation string) error {
-	// Check for a diabled lockfile and if present remove to allow puppet to run.
+	// Check for a disabled lockfile and if present remove to allow puppet to run.
 	if _, err := os.Stat(disableLockFileLocation); err == nil {
 		log.Printf("Disable lock found, removing.\n")
 		if err := os.Remove(disableLockFileLocation); err != nil {
 			log.Printf("Unable to remove lockfile %s\n", disableLockFileLocation)
 			return err
 		}
-		log.Printf("Lock file removed.\n")
+		log.Printf("Disable lock removed.\n")
 		return nil
 	}
 	return nil
@@ -32,7 +33,7 @@ func checkRunState(runLockFileLocation string) error {
 			if err := os.Remove(runLockFileLocation); err != nil {
 				log.Fatalf("Unable to remove lockfile %s.\n", runLockFileLocation)
 			}
-			log.Printf("Deleting %s which is %s old.\n", filestat.Name(), diff)
+			log.Printf("Deleting run lock %s which is %s old.\n", filestat.Name(), diff)
 		} else {
 			log.Printf("Found lock file %s which is less than %s old aborting run.\n", filestat.Name(), cutoff)
 			return err
@@ -48,14 +49,18 @@ func random(min, max int) int {
 	return rand.Intn(max-min) + min
 }
 
-func runPuppet(puppetBinLocation, execPuppetCMD, runLockFileLocation, disableLockFileLocation string) {
+func runPuppet(puppetBinLocation,  runLockFileLocation, disableLockFileLocation string , runNowFlag *bool) {
 	if _, err := os.Stat(puppetBinLocation); err != nil {
 		log.Fatalf("Puppet binary not found at %s. \n", puppetBinLocation)
 	}
 	// Sleep until we need to run
-	myrand := random(15, 45)
-	log.Printf("Delaying puppet-nanny run by %d minutes", myrand)
-	time.Sleep(time.Duration(myrand) * time.Minute)
+
+	delay := 0
+	if !*runNowFlag {
+		delay = random(15, 45)
+	}
+	log.Printf("Delaying puppet-nanny run by %d minutes", delay)
+	time.Sleep(time.Duration(delay) * time.Minute)
 	// Carry out necessary checks to see if we should run puppet at this time.
 	if err := checkRunState(runLockFileLocation); err != nil {
 		return
@@ -64,7 +69,8 @@ func runPuppet(puppetBinLocation, execPuppetCMD, runLockFileLocation, disableLoc
 	if err := removeAgentDisableLock(disableLockFileLocation); err != nil {
 		return
 	}
-	cmd := exec.Command(execPuppetCMD)
+	args := []string{"agent", "-t"}
+	cmd := exec.Command(puppetBinLocation,args...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {
@@ -74,7 +80,9 @@ func runPuppet(puppetBinLocation, execPuppetCMD, runLockFileLocation, disableLoc
 }
 
 func main() {
-	execPuppetCMD := ""
+
+	runNowFlag := flag.Bool("now", false, "Runs puppet now.")
+	flag.Parse()
 	runLockFileLocation := ""
 	disableLockFileLocation := ""
 	puppetBinLocation := ""
@@ -84,8 +92,7 @@ func main() {
 		if os.Getuid() != 0 {
 			log.Fatalf("puppet-nanny needs to be ran as root")
 		}
-		puppetBinLocation = "/opt/puppetlabs/puppet/bin/puppet"
-		execPuppetCMD = `"/opt/puppetlabs/puppet/bin/puppet", "agent", "-t"`
+		puppetBinLocation = "/opt/puppetlabs/bin/puppet"
 		runLockFileLocation = "/opt/puppetlabs/puppet/cache/state/agent_catalog_run.lock"
 		disableLockFileLocation = "/opt/puppetlabs/puppet/cache/state/agent_disabled.lock"
 	case "windows":
@@ -93,7 +100,6 @@ func main() {
 			log.Fatalf("puppet-nanny needs to be ran with admin privledges. \n")
 		}
 		puppetBinLocation = "C:\\Program Files\\Puppet Labs\\Puppet\\bin\\puppet.bat"
-		execPuppetCMD = `"C:\\Program Files\\Puppet Labs\\Puppet\\bin\\puppet.bat", "agent", "-t"`
 		runLockFileLocation = "C:\\ProgramData\\PuppetLabs\\puppet\\cache\\state\\agent_catalog_run.lock"
 		disableLockFileLocation = "C:\\ProgramData\\PuppetLabs\\puppet\\cache\\state\\agent_disabled.lock"
 	default:
@@ -101,6 +107,6 @@ func main() {
 	}
 	log.Printf("Puppet binary set as %s.\n", puppetBinLocation)
 	for {
-		runPuppet(puppetBinLocation, execPuppetCMD, runLockFileLocation, disableLockFileLocation)
+		runPuppet(puppetBinLocation, runLockFileLocation, disableLockFileLocation , runNowFlag)
 	}
 }
