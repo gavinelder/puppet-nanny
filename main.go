@@ -49,7 +49,7 @@ func random(min, max int) int {
 	return rand.Intn(max-min) + min
 }
 
-func runPuppet(puppetBinLocation, runLockFileLocation, disableLockFileLocation string, runNowFlag *bool) {
+func runPuppet(puppetBinLocation, runLockFileLocation, disableLockFileLocation string, runNowFlag *bool, envFlag *string) {
 	if _, err := os.Stat(puppetBinLocation); err != nil {
 		log.Fatalf("Puppet binary not found at %s. \n", puppetBinLocation)
 	}
@@ -69,8 +69,11 @@ func runPuppet(puppetBinLocation, runLockFileLocation, disableLockFileLocation s
 	if err := removeAgentDisableLock(disableLockFileLocation); err != nil {
 		return
 	}
-	args := []string{"agent", "-t"}
-	cmd := exec.Command(puppetBinLocation, args...)
+	runArgs := []string{"agent", "-t"}
+	if *envFlag != "" {
+		runArgs = append(runArgs, "--environment", *envFlag)
+	}
+	cmd := exec.Command(puppetBinLocation, runArgs...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {
@@ -80,6 +83,7 @@ func runPuppet(puppetBinLocation, runLockFileLocation, disableLockFileLocation s
 }
 
 func main() {
+	environmentFlag := flag.String("environment", "", "Specifies the environment puppet should run using.")
 	runNowFlag := flag.Bool("now", false, "Runs puppet now.")
 	flag.Parse()
 	runLockFileLocation := ""
@@ -106,6 +110,6 @@ func main() {
 	}
 	log.Printf("Puppet binary set as %s.\n", puppetBinLocation)
 	for {
-		runPuppet(puppetBinLocation, runLockFileLocation, disableLockFileLocation, runNowFlag)
+		runPuppet(puppetBinLocation, runLockFileLocation, disableLockFileLocation, runNowFlag, environmentFlag)
 	}
 }
