@@ -49,7 +49,7 @@ func random(min, max int) int {
 	return rand.Intn(max-min) + min
 }
 
-func runPuppet(puppetBinLocation,  runLockFileLocation, disableLockFileLocation string , runNowFlag *bool) {
+func runPuppet(puppetBinLocation, runLockFileLocation, disableLockFileLocation string, runNowFlag *bool) {
 	if _, err := os.Stat(puppetBinLocation); err != nil {
 		log.Fatalf("Puppet binary not found at %s. \n", puppetBinLocation)
 	}
@@ -70,7 +70,7 @@ func runPuppet(puppetBinLocation,  runLockFileLocation, disableLockFileLocation 
 		return
 	}
 	args := []string{"agent", "-t"}
-	cmd := exec.Command(puppetBinLocation,args...)
+	cmd := exec.Command(puppetBinLocation, args...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {
@@ -80,7 +80,6 @@ func runPuppet(puppetBinLocation,  runLockFileLocation, disableLockFileLocation 
 }
 
 func main() {
-
 	runNowFlag := flag.Bool("now", false, "Runs puppet now.")
 	flag.Parse()
 	runLockFileLocation := ""
@@ -107,6 +106,6 @@ func main() {
 	}
 	log.Printf("Puppet binary set as %s.\n", puppetBinLocation)
 	for {
-		runPuppet(puppetBinLocation, runLockFileLocation, disableLockFileLocation , runNowFlag)
+		runPuppet(puppetBinLocation, runLockFileLocation, disableLockFileLocation, runNowFlag)
 	}
 }
