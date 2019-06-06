@@ -86,6 +86,7 @@ func main() {
 	environmentFlag := flag.String("environment", "", "Specifies the environment puppet should run using.")
 	runNowFlag := flag.Bool("now", false, "Runs puppet now.")
 	flag.Parse()
+
 	runLockFileLocation := ""
 	disableLockFileLocation := ""
 	puppetBinLocation := ""
@@ -108,7 +109,6 @@ func main() {
 	default:
 		log.Fatalf("OS not supported.\n")
 	}
-	log.Printf("Puppet binary set as %s.\n", puppetBinLocation)
 	for {
 		runPuppet(puppetBinLocation, runLockFileLocation, disableLockFileLocation, runNowFlag, environmentFlag)
 	}
