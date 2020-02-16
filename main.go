@@ -112,7 +112,7 @@ func main() {
 		runConfig.runLockFileLocation = "C:\\ProgramData\\PuppetLabs\\puppet\\cache\\state\\agent_catalog_run.lock"
 		runConfig.disableLockFileLocation = "C:\\ProgramData\\PuppetLabs\\puppet\\cache\\state\\agent_disabled.lock"
 	default:
-		log.Fatal("OS not supported.\n")
+		log.Fatalf("%v is not officially supported please raise an issue at https://github.com/gavinelder/puppet-nannyy .\n", goos)
 	}
 	for {
 		runPuppet(runConfig)
