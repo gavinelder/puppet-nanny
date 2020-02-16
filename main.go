@@ -10,6 +10,14 @@ import (
 	"time"
 )
 
+type puppetRunConfig struct {
+	runLockFileLocation     string
+	disableLockFileLocation string
+	puppetBinLocation       string
+	environment             *string
+	now                     *bool
+}
+
 func removeAgentDisableLock(disableLockFileLocation string) error {
 	// Check for a disabled lockfile and if present remove to allow puppet to run.
 	if _, err := os.Stat(disableLockFileLocation); err == nil {
@@ -49,66 +57,64 @@ func random(min, max int) int {
 	return rand.Intn(max-min) + min
 }
 
-func runPuppet(puppetBinLocation, runLockFileLocation, disableLockFileLocation string, runNowFlag *bool, envFlag *string) {
-	if _, err := os.Stat(puppetBinLocation); err != nil {
-		log.Fatalf("Puppet binary not found at %s. \n", puppetBinLocation)
+func runPuppet(runConfig puppetRunConfig) {
+	if _, err := os.Stat(runConfig.puppetBinLocation); err != nil {
+		log.Fatalf("Puppet binary not found at %s. \n", runConfig.puppetBinLocation)
 	}
 	// Sleep until we need to run
 	delay := 0
-	if !*runNowFlag {
+	if !*runConfig.now {
 		delay = random(15, 45)
 	}
 	log.Printf("Delaying puppet-nanny run by %d minutes", delay)
 	time.Sleep(time.Duration(delay) * time.Minute)
 	// Carry out necessary checks to see if we should run puppet at this time.
-	if err := checkRunState(runLockFileLocation); err != nil {
+	if err := checkRunState(runConfig.runLockFileLocation); err != nil {
 		return
 	}
 	// Check if puppet is disabled, checked as part of every run as someone may disable at any point.
-	if err := removeAgentDisableLock(disableLockFileLocation); err != nil {
+	if err := removeAgentDisableLock(runConfig.disableLockFileLocation); err != nil {
 		return
 	}
 	runArgs := []string{"agent", "-t"}
-	if *envFlag != "" {
-		runArgs = append(runArgs, "--environment", *envFlag)
+	if *runConfig.environment != "" {
+		runArgs = append(runArgs, "--environment", *runConfig.environment)
 	}
-	cmd := exec.Command(puppetBinLocation, runArgs...)
+	cmd := exec.Command(runConfig.puppetBinLocation, runArgs...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {
-		log.Fatalf("cmd.Run() failed with %s.\n", err)
+		log.Fatalf("%v failed with %s.\n", cmd, err)
 	}
 	log.Print("Puppet run succeeded.\n")
 }
 
 func main() {
-	environmentFlag := flag.String("environment", "", "Specifies the environment puppet should run using.")
-	runNowFlag := flag.Bool("now", false, "Runs puppet now.")
-	flag.Parse()
+	runConfig := puppetRunConfig{}
 
-	runLockFileLocation := ""
-	disableLockFileLocation := ""
-	puppetBinLocation := ""
+	runConfig.environment = flag.String("environment", "", "Specifies the environment puppet should run using.")
+	runConfig.now = flag.Bool("now", false, "Runs puppet now.")
+	flag.Parse()
 
 	switch goos := runtime.GOOS; goos {
 	case "darwin", "linux":
 		if os.Getuid() != 0 {
 			log.Fatal("puppet-nanny needs to be ran as root")
 		}
-		puppetBinLocation = "/opt/puppetlabs/bin/puppet"
-		runLockFileLocation = "/opt/puppetlabs/puppet/cache/state/agent_catalog_run.lock"
-		disableLockFileLocation = "/opt/puppetlabs/puppet/cache/state/agent_disabled.lock"
+		runConfig.puppetBinLocation = "/opt/puppetlabs/bin/puppet"
+		runConfig.runLockFileLocation = "/opt/puppetlabs/puppet/cache/state/agent_catalog_run.lock"
+		runConfig.disableLockFileLocation = "/opt/puppetlabs/puppet/cache/state/agent_disabled.lock"
 	case "windows":
 		if _, err := os.Open("\\\\.\\PHYSICALDRIVE0"); err != nil {
 			log.Fatal("puppet-nanny needs to be ran with admin privledges. \n")
 		}
-		puppetBinLocation = "C:\\Program Files\\Puppet Labs\\Puppet\\bin\\puppet.bat"
-		runLockFileLocation = "C:\\ProgramData\\PuppetLabs\\puppet\\cache\\state\\agent_catalog_run.lock"
-		disableLockFileLocation = "C:\\ProgramData\\PuppetLabs\\puppet\\cache\\state\\agent_disabled.lock"
+		runConfig.puppetBinLocation = "C:\\Program Files\\Puppet Labs\\Puppet\\bin\\puppet.bat"
+		runConfig.runLockFileLocation = "C:\\ProgramData\\PuppetLabs\\puppet\\cache\\state\\agent_catalog_run.lock"
+		runConfig.disableLockFileLocation = "C:\\ProgramData\\PuppetLabs\\puppet\\cache\\state\\agent_disabled.lock"
 	default:
 		log.Fatal("OS not supported.\n")
 	}
 	for {
-		runPuppet(puppetBinLocation, runLockFileLocation, disableLockFileLocation, runNowFlag, environmentFlag)
+		runPuppet(runConfig)
 	}
 }
