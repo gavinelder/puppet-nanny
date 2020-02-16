@@ -54,7 +54,6 @@ func runPuppet(puppetBinLocation, runLockFileLocation, disableLockFileLocation s
 		log.Fatalf("Puppet binary not found at %s. \n", puppetBinLocation)
 	}
 	// Sleep until we need to run
-
 	delay := 0
 	if !*runNowFlag {
 		delay = random(15, 45)
