@@ -1,4 +1,4 @@
-# Puppet-Nanny
+# Puppet-Nanny awesome project
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/gavinelder/puppet-nanny)](https://goreportcard.com/report/github.com/gavinelder/puppet-nanny)
 [![Build Status](https://travis-ci.org/gavinelder/puppet-nanny.svg?branch=master)](https://travis-ci.org/gavinelder/puppet-nanny)
