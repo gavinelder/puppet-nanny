@@ -36,7 +36,7 @@ func checkRunState(runLockFileLocation string) error {
 	// Check for puppet running state by inspecting the lockfile & remove if > 25 mins old.
 	if filestat, err := os.Stat(runLockFileLocation); err == nil {
 		now := time.Now()
-		cutoff := 25 * time.Minute
+		cutoff := 180 * time.Minute
 		if diff := now.Sub(filestat.ModTime()); diff > cutoff {
 			if err := os.Remove(runLockFileLocation); err != nil {
 				log.Fatalf("Unable to remove lockfile %s.\n", runLockFileLocation)
@@ -64,7 +64,7 @@ func runPuppet(runConfig puppetRunConfig) {
 	// Sleep until we need to run
 	delay := 0
 	if !*runConfig.now {
-		delay = random(15, 45)
+		delay = random(60, 180)
 	}
 	log.Printf("Delaying puppet-nanny run by %d minutes", delay)
 	time.Sleep(time.Duration(delay) * time.Minute)
@@ -84,9 +84,11 @@ func runPuppet(runConfig puppetRunConfig) {
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {
-		log.Fatalf("%v failed with %s.\n", cmd, err)
+		log.Printf("%v failed with %s.\n", cmd, err)
 	}
-	log.Print("Puppet run succeeded.\n")
+	if cmd.ProcessState.ExitCode() == 0 {
+		log.Print("Puppet run succeeded.\n")
+	}
 }
 
 func main() {
