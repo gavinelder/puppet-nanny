@@ -79,9 +79,11 @@ clean:
 
 
 build: .pre-build
-	GOOS=windows go build -i -o build/windows/${APP_NAME}_win.exe -pkgdir ${PKGDIR_TMP}_windows -ldflags ${BUILD_VERSION} ./main.go
-	GOOS=darwin go build -i -o build/darwin/${APP_NAME}_darwin -pkgdir ${PKGDIR_TMP}_darwin -ldflags ${BUILD_VERSION} ./main.go
-	GOOS=linux go build -i -o build/linux/${APP_NAME}_linux -pkgdir ${PKGDIR_TMP}_linux -ldflags ${BUILD_VERSION} ./main.go
+	GOOS=windows GOARCH=amd64 go build -o build/windows/${APP_NAME}_win.exe -pkgdir ${PKGDIR_TMP}_windows  ./main.go
+	GOOS=linux GOARCH=amd64 go build -o build/linux/${APP_NAME}_linux -pkgdir ${PKGDIR_TMP}_linux  ./main.go
+	GOOS=darwin GOARCH=amd64 go build -o build/darwin/${APP_NAME}_darwin_amd64 -pkgdir ${PKGDIR_TMP}_darwin ./main.go
+	GOOS=darwin GOARCH=arm64 go build -o build/darwin/${APP_NAME}_darwin_arm64 -pkgdir ${PKGDIR_TMP}_darwin ./main.go
+	/usr/bin/lipo -create -output build/darwin/${APP_NAME}_darwin  build/darwin/${APP_NAME}_darwin_amd64  build/darwin/${APP_NAME}_darwin_arm64 
 
 test:
 	go test -cover -race -v $(shell go list ./... | grep -v /vendor/)
